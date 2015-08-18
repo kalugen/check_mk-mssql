@@ -1,0 +1,87 @@
+
+#SQLServer:Databases percent_log_used pubs 24
+#SQLServer:Databases percent_log_used efw_mediobanca_ias 21
+#SQLServer:Databases percent_log_used easyfinance 42
+#SQLServer:Databases percent_log_used efw_mediobanca_001 8
+#SQLServer:Databases percent_log_used QuestWorkDatabase 41
+#SQLServer:Databases percent_log_used efw_repository 1
+#SQLServer:Databases percent_log_used msdb 63
+#SQLServer:Databases percent_log_used Northwind 40
+#SQLServer:Databases percent_log_used tempdb 64
+#SQLServer:Databases percent_log_used model 54
+#SQLServer:Databases percent_log_used mssqlsystemresource 55
+#SQLServer:Databases percent_log_used _Total 36
+#SQLServer:Databases percent_log_used master 19
+
+#def mssql_counters_item(line, add_counter_name):
+#    obj, counter, instance = line[:3]
+#
+#    if obj.endswith(':Databases'):
+#        obj = obj[:-10]
+#
+#    if add_counter_name:
+#        return obj + ' ' + instance + ' ' + counter
+#    else:
+#        return obj + ' ' + instance
+#
+#
+#def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt = None):
+#    inventory = []
+#    for line in info:
+#        if line[1] in want_counters:
+#            this_counter = line[1]
+#
+#            # Get the base value for perc values
+#            if perc_w_base:
+#                base = 0.0
+#                for line2 in info:
+#                    if mssql_counters_item(line2, add_counter_name) == \
+#                       mssql_counters_item(line, add_counter_name) + '_base':
+#                        base = float(line2[-1])
+#                        break
+#                if base == 0.0:
+#                    continue # Skip counters where base is "0"
+#
+#            inventory.append((mssql_counters_item(line, add_counter_name), dflt))
+#    return inventory
+
+
+
+factory_settings['mssql_logfile_defaults'] = {
+  "usage_levels": (80.0,90.0)
+};
+
+
+def check_mssql_logfile(item,params,info):
+  warn,crit = params['usage_levels']
+
+  for line in info:
+    for line in info:
+        if mssql_counters_item(line, 'percent_log_used') != item:
+          continue
+
+        pct_usage = savefloat(line[3])
+        output    = "Usage at %.2f%%" % pct_usage
+        perfdata  = [ ( "usage", pct_usage, warn, crit, 0, 100 ) ]
+
+        rc = 3
+
+        if pct_usage > crit:
+          rc = 2
+        elif pct_usage > warn:
+          rc = 1
+        else:
+          rc = 0
+
+        return (rc,output,perfdata)
+
+check_info['mssql_counters.logfile'] = {
+    "check_function"          : check_mssql_logfile,
+    "inventory_function"      : lambda info: inventory_mssql_counters(info,
+                                ["percent_log_used"], False, 'percent_log_used', {}),
+    "service_description"     : "",
+    "has_perfdata"            : True,
+    "group"                   : "mssql_counters",
+    "default_levels_variable" : "mssql_logfile_defaults",
+    "includes"                : ["mssql_counters"]
+}
