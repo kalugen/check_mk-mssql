@@ -1,4 +1,4 @@
-
+# Sample data:
 #SQLServer:Databases percent_log_used pubs 24
 #SQLServer:Databases percent_log_used efw_mediobanca_ias 21
 #SQLServer:Databases percent_log_used easyfinance 42
@@ -13,44 +13,9 @@
 #SQLServer:Databases percent_log_used _Total 36
 #SQLServer:Databases percent_log_used master 19
 
-#def mssql_counters_item(line, add_counter_name):
-#    obj, counter, instance = line[:3]
-#
-#    if obj.endswith(':Databases'):
-#        obj = obj[:-10]
-#
-#    if add_counter_name:
-#        return obj + ' ' + instance + ' ' + counter
-#    else:
-#        return obj + ' ' + instance
-#
-#
-#def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt = None):
-#    inventory = []
-#    for line in info:
-#        if line[1] in want_counters:
-#            this_counter = line[1]
-#
-#            # Get the base value for perc values
-#            if perc_w_base:
-#                base = 0.0
-#                for line2 in info:
-#                    if mssql_counters_item(line2, add_counter_name) == \
-#                       mssql_counters_item(line, add_counter_name) + '_base':
-#                        base = float(line2[-1])
-#                        break
-#                if base == 0.0:
-#                    continue # Skip counters where base is "0"
-#
-#            inventory.append((mssql_counters_item(line, add_counter_name), dflt))
-#    return inventory
-
-
-
 factory_settings['mssql_logfile_defaults'] = {
   "usage_levels": (80.0,90.0)
 };
-
 
 def check_mssql_logfile(item,params,info):
   warn,crit = params['usage_levels']
