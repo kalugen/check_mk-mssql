@@ -21,24 +21,23 @@ def check_mssql_logfile(item,params,info):
   warn,crit = params['usage_levels']
 
   for line in info:
-    for line in info:
-        if mssql_counters_item(line, 'percent_log_used') != item:
-          continue
+    if mssql_counters_item(line, 'percent_log_used') != item:
+      continue
 
-        pct_usage = savefloat(line[3])
-        output    = "Usage at %.2f%%" % pct_usage
-        perfdata  = [ ( "usage", pct_usage, warn, crit, 0, 100 ) ]
+    pct_usage = savefloat(line[3])
+    output    = "Usage at %.2f%%" % pct_usage
+    perfdata  = [ ( "usage", pct_usage, warn, crit, 0, 100 ) ]
 
-        rc = 3
+    rc = 3
 
-        if pct_usage > crit:
-          rc = 2
-        elif pct_usage > warn:
-          rc = 1
-        else:
-          rc = 0
+    if pct_usage > crit:
+      rc = 2
+    elif pct_usage > warn:
+      rc = 1
+    else:
+      rc = 0
 
-        return (rc,output,perfdata)
+    return (rc,output,perfdata)
 
 check_info['mssql_counters.logfile'] = {
     "check_function"          : check_mssql_logfile,

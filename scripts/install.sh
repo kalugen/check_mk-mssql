@@ -8,32 +8,27 @@
 #       5) it should detect or ask for paths and user/group instead of hardcoding them
 #       5) It should have the option to create both server and agent RPMs
 
-WIPDIR="/tmp/mssql_checks_wip"
 CHECKDIR="/usr/share/check_mk/checks"
 DOCDIR="/usr/share/doc/check_mk/checks"
 TEMPLDIR="/usr/share/nagios/html/pnp4nagios/templates"
 PERFDIR="/usr/share/check_mk/web/plugins/perfometer"
 WATODIR="/usr/share/check_mk/web/plugins/wato"
 
+CMKUSER="apache"
+CMKGROUP="nagios"
+
 echo "MSSQL Checks installation script"
 
-mkdir ${TMPDIR}
-cp -v ./checks/* ./data/* ${TMPDIR}/
-cp ${CHECKDIR}/mssql_counters ${WIPDIR}/mssql_counters.bck
-cat ${TMPDIR}/mssql_counters.orig ${TMPDIR}/mssql_logfile > ${CHECKDIR}/mssql_counters
-
-#cp -v ./checks/* /usr/share/check_mk/checks/
+cp -v ./checks/* ${CHECKDIR}
 cp -v ./docs/* ${DOCDIR}
 cp -v ./templates/*.php ${TEMPLDIR}
 cp -v ./perfometer/perfometer_*.py ${PERFDIR}
 cp -v ./wato/*.py ${WATODIR}
 
-chown apache:nagios -R ${CHECKDIR}
-chown apache:nagios -R ${DOCDIR}
-chown apache:nagios -R ${TEMPLDIR}
-chown apache:nagios -R ${PERFDIR}
-
-chmod ug+x ${CHECKDIR}/*
+for __DIR in ${CHECKDIR} ${DOCDIR} ${TEMPLDIR} ${PERFDIR} ${WATODIR}; do
+  chown ${CMKUSER}:${CMKGROUP} -R ${__DIR}
+  chmod ug+x ${__DIR}
+done
 
 service httpd restart
 
