@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Sample data:
 #SQLServer:Databases percent_log_used pubs 24
 #SQLServer:Databases percent_log_used efw_mediobanca_ias 21
