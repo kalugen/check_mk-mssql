@@ -113,8 +113,6 @@ Else
     isClustered = TRUE
 End If
 
-On Error Goto 0
-
 ' Initialize connection objects
 Set CONN = CreateObject("ADODB.Connection")
 Set RS = CreateObject("ADODB.Recordset")
@@ -144,11 +142,20 @@ For Each instId In instIds.Keys
             CONN.Properties("Data Source").Value = hostname & "\" & instName
         End If
     Else
-        CONN.Properties("Data Source").Value = instData(instName)
-        CONN.Properties("Initial Catalog").Value = instName
+        If instName = "MSSQLSERVER" Then
+            CONN.Properties("Data Source").Value = instData(instName)
+        Else
+            CONN.Properties("Data Source").Value = instData(instName) & "\" & instName
+        End If
     End If
     'WScript.echo (CONN)
     CONN.Open
+
+    If Err.Number <> 0 Then
+        addOutput("Instance " & instName & " unavailable")
+        Err.Clear()
+        Continue For
+    End If
 
     ' Get counter data for the whole instance
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
