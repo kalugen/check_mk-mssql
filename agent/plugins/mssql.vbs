@@ -90,20 +90,30 @@ Next
 
 Set WMI = nothing
 
-Dim CONN, RS, hostname,WMICL, colItems, objItem, isClustered
+Dim CONN, RS, hostname, WMICL, colItems, objItem, isClustered, instData
+
+Set instData = CreateObject("Scripting.Dictionary")
+
+' Try-Catch à la VBS
+On Error Resume Next
 
 Set WMICL = GetObject("WINMGMTS:\\.\root\mscluster")
+Set colItems = WMICL.execQuery("Select Name, status, State, Type, PrivateProperties from MsCluster_Resource WHERE Type = 'SQL Server' ")
+For Each ObjItem in colItems
+    Dim instName_
+    instName_ = objItem.PrivateProperties.InstanceName
+    instData(instName_) = objItem.PrivateProperties.VirtualServerName
+Next
 
-If  WMICL is Nothing then
+If Err.Number <> 0 Then
+    Err.Clear()
     isClustered = FALSE
     hostname = WScript.CreateObject("WScript.Shell").ExpandEnvironmentStrings("%COMPUTERNAME%")
 Else
     isClustered = TRUE
-    Set colItems = WMICL.execQuery("Select Name, status, State, Type, PrivateProperties from MsCluster_Resource WHERE Type = 'SQL Server' ")
-    For Each ObjItem in colItems
-        instIds( Replace(objItem.PrivateProperties.InstanceName, "$", "__") ) = objItem.PrivateProperties.VirtualServerName
-    Next
 End If
+
+On Error Goto 0
 
 ' Initialize connection objects
 Set CONN = CreateObject("ADODB.Connection")
@@ -121,16 +131,20 @@ For Each instId In instIds.Keys
 
     If InStr(instId, "__") <> 0 Then
         instName = Split(instId, "__")(1)
-                instId = Replace(instId, "__", "_")
-        Else
+        instId = Replace(instId, "__", "_")
+    Else
         instName = instId
     End If
 
-    ' In case of instance name "MSSQLSERVER" always use (local) as connect string
-    If Not isClustered and instName = "MSSQLSERVER" Then
-        CONN.Properties("Data Source").Value = "(local)"
+    If Not isClustered Then
+        ' In case of instance name "MSSQLSERVER" always use (local) as connect string
+        If instName = "MSSQLSERVER" Then
+            CONN.Properties("Data Source").Value = "(local)"
+        Else
+            CONN.Properties("Data Source").Value = hostname & "\" & instName
+        End If
     Else
-        CONN.Properties("Data Source").Value = instIds(instId)
+        CONN.Properties("Data Source").Value = instData(instName)
         CONN.Properties("Initial Catalog").Value = instName
     End If
     'WScript.echo (CONN)
@@ -140,6 +154,7 @@ For Each instId In instIds.Keys
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
             "FROM sys.dm_os_performance_counters " & _
             "WHERE object_name NOT LIKE '%Deprecated%'", CONN
+
     addOutput( "<<<mssql_counters>>>" )
     Dim objectName, counterName, instanceName, value
     Do While NOT RS.Eof
