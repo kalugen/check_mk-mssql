@@ -94,7 +94,8 @@ Dim CONN, RS, hostname, WMICL, colItems, objItem, isClustered, instData
 
 Set instData = CreateObject("Scripting.Dictionary")
 
-' Try-Catch à la VBS
+
+' Disable automatic handling of errors
 On Error Resume Next
 
 Set WMICL = GetObject("WINMGMTS:\\.\root\mscluster")
@@ -112,6 +113,8 @@ If Err.Number <> 0 Then
 Else
     isClustered = TRUE
 End If
+
+On Error Goto 0
 
 ' Initialize connection objects
 Set CONN = CreateObject("ADODB.Connection")
@@ -142,6 +145,7 @@ For Each instId In instIds.Keys
             CONN.Properties("Data Source").Value = hostname & "\" & instName
         End If
     Else
+        ' In case the instance name is "MSSQLSERVER" always use the virtual server name
         If instName = "MSSQLSERVER" Then
             CONN.Properties("Data Source").Value = instData(instName)
         Else
@@ -149,13 +153,8 @@ For Each instId In instIds.Keys
         End If
     End If
     'WScript.echo (CONN)
-    CONN.Open
 
-    If Err.Number <> 0 Then
-        addOutput("Instance " & instName & " unavailable")
-        Err.Clear()
-        Continue For
-    End If
+    CONN.Open
 
     ' Get counter data for the whole instance
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
