@@ -11,15 +11,17 @@
 #SQLServer:Databases percent_log_used Northwind 40
 #SQLServer:Databases percent_log_used tempdb 64
 #SQLServer:Databases percent_log_used model 54
-#SQLServer:Databases percent_log_used mssqlsystemresource 55
-#SQLServer:Databases percent_log_used _Total 36
 #SQLServer:Databases percent_log_used master 19
 
+# Da ignorare:
+#SQLServer:Databases percent_log_used _Total 36
+#SQLServer:Databases percent_log_used mssqlsystemresource 55
+
 factory_settings['mssql_logfile_defaults'] = {
-  "usage_levels": (80.0,90.0)
+  "log_usage_levels": (10000.0,10000.0)
 };
 
-def check_mssql_logfile(item,params,info):
+def check_mssql_percent_log_used(item,params,info):
   warn,crit = params['usage_levels']
 
   for line in info:
@@ -41,13 +43,13 @@ def check_mssql_logfile(item,params,info):
 
     return (rc,output,perfdata)
 
-check_info['mssql_counters.logfile'] = {
-    "check_function"          : check_mssql_logfile,
+check_info['mssql_counters.percent_log_used'] = {
+    "check_function"          : check_mssql_percent_log_used,
     "inventory_function"      : lambda info: inventory_mssql_counters(info,
                                 ["percent_log_used"], False, 'percent_log_used', {}),
     "service_description"     : "",
     "has_perfdata"            : True,
-    "group"                   : "mssql_counters",
+    "group"                   : "mssql_percent_log_used_counters",
     "default_levels_variable" : "mssql_logfile_defaults",
     "includes"                : ["mssql_counters"]
 }
