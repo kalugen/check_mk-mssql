@@ -1,28 +1,30 @@
 #!/usr/bin/python
 
 # Sample data:
-#SQLServer:Databases percent_log_used pubs 24
-#SQLServer:Databases percent_log_used efw_mediobanca_ias 21
-#SQLServer:Databases percent_log_used easyfinance 42
-#SQLServer:Databases percent_log_used efw_mediobanca_001 8
-#SQLServer:Databases percent_log_used QuestWorkDatabase 41
-#SQLServer:Databases percent_log_used efw_repository 1
-#SQLServer:Databases percent_log_used msdb 63
-#SQLServer:Databases percent_log_used Northwind 40
-#SQLServer:Databases percent_log_used tempdb 64
-#SQLServer:Databases percent_log_used model 54
-#SQLServer:Databases percent_log_used master 19
+# SQLServer:Databases percent_log_used pubs 24
+# SQLServer:Databases percent_log_used efw_mediobanca_ias 21
+# SQLServer:Databases percent_log_used easyfinance 42
+# SQLServer:Databases percent_log_used efw_mediobanca_001 8
+# SQLServer:Databases percent_log_used QuestWorkDatabase 41
+# SQLServer:Databases percent_log_used efw_repository 1
+# SQLServer:Databases percent_log_used msdb 63
+# SQLServer:Databases percent_log_used Northwind 40
+# SQLServer:Databases percent_log_used tempdb 64
+# SQLServer:Databases percent_log_used model 54
+# SQLServer:Databases percent_log_used master 19
 
-# Da ignorare:
-#SQLServer:Databases percent_log_used _Total 36
-#SQLServer:Databases percent_log_used mssqlsystemresource 55
+def inventory_mssql_percent_log_used(info):
+  inventory=[]
+  for line in info:
+    if line[1] == "percent_log_used":
+      inventory.append( (mssql_counters_item(line, "percent_log_used"), None) )
 
-factory_settings['mssql_logfile_defaults'] = {
-  "log_usage_levels": (10000.0,10000.0)
-};
+  return inventory
 
 def check_mssql_percent_log_used(item,params,info):
-  warn,crit = params['usage_levels']
+  rc = 0
+  perfdata = []
+  output = ""
 
   for line in info:
     if mssql_counters_item(line, 'percent_log_used') != item:
@@ -30,26 +32,16 @@ def check_mssql_percent_log_used(item,params,info):
 
     pct_usage = savefloat(line[3])
     output    = "Usage at %.2f%%" % pct_usage
-    perfdata  = [ ( "usage", pct_usage, warn, crit, 0, 100 ) ]
+    perfdata.append( ( "usage", pct_usage, None, None, 0, 100 ) )
 
-    rc = 3
 
-    if pct_usage > crit:
-      rc = 2
-    elif pct_usage > warn:
-      rc = 1
-    else:
-      rc = 0
-
-    return (rc,output,perfdata)
+  return (rc,output,perfdata)
 
 check_info['mssql_counters.percent_log_used'] = {
     "check_function"          : check_mssql_percent_log_used,
-    "inventory_function"      : lambda info: inventory_mssql_counters(info,
-                                ["percent_log_used"], False, 'percent_log_used', {}),
+    "inventory_function"      : inventory_mssql_percent_log_used,
     "service_description"     : "",
     "has_perfdata"            : True,
     "group"                   : "mssql_percent_log_used_counters",
-    "default_levels_variable" : "mssql_logfile_defaults",
     "includes"                : ["mssql_counters"]
 }

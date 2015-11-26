@@ -1,0 +1,56 @@
+#!/usr/bin/python
+
+# NOTE: the specifications require that any alarm should be ignored if it don't
+# persist for at least 5 minutes and any warning condition persisting more than
+# 15 minutes should be elevated to critical. This must be implmented on BSM/Nagios.
+
+# Sample data:
+#SQLServer:General_Statistics processes_blocked None 0
+
+factory_settings['mssql_processes_blocked_defaults'] = {
+  "num_blocked": (10000,10000)
+};
+
+# Create the check if the process_blocked line is present, returns an Item for
+# any monitored SQL Server instance present
+def inventory_mssql_processes_blocked(info):
+  inventory=[]
+
+  for line in info:
+    if line[1] == "processes_blocked":
+      inventory.append( (mssql_counters_item(line,"process_blocked"), None))
+
+  return inventory
+
+def check_mssql_processes_blocked(item,params,info):
+  warn,crit = params['num_blocked']
+  perfdata = []
+  rc = 3
+  output = ""
+
+  for line in info:
+    if mssql_counters_item(line, 'processes_blocked') != item:
+      continue
+
+    blocked_count = saveint(line[3])
+    output  = "%d blocked processes" % blocked_count
+    perfdata.append( ( "blocked_procs", blocked_count, warn, crit, None, None ) )
+
+    if blocked_count > crit:
+      rc = 2
+    elif blocked_count > warn:
+      rc = 1
+    else:
+      rc = 0
+
+  return (rc,output,perfdata)
+
+check_info['mssql_counters.processes_blocked'] = {
+    "check_function"          : check_mssql_processes_blocked,
+    "inventory_function"      : inventory_mssql_processes_blocked,
+    "service_description"     : "",
+    "has_perfdata"            : True,
+    "group"                   : "mssql_processes_blocked_counters",
+    "default_levels_variable" : "mssql_processes_blocked_defaults",
+    "includes"                : ["mssql_counters"]
+}

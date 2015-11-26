@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+# Sample data:
+# MSSQL_RSDBCLUSTER:Databases active_transactions RiskScape 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions tempdb 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions model 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions RiskScapeHistory 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions mssqlsystemresource 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions msdb 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions _Total 0
+# MSSQL_RSDBCLUSTER:Databases active_transactions master 0
+
+def inventory_mssql_active_transactions(info):
+  inventory=[]
+  for line in info:
+    if line[1] == "active_transactions":
+      inventory.append((mssql_counters_item(line, "active_transactions"), None))
+
+  return inventory
+
+def check_mssql_active_transactions(item,params,info):
+  rc = 0
+  perfdata = []
+  output = ""
+
+  for line in info:
+    if mssql_counters_item(line, 'active_transactions') != item:
+      continue
+
+    active_count = saveint(line[3])
+    output    = "%d active transactions" % active_count
+    perfdata.append(( "active_num", active_count, None, None, None, None ))
+
+  return (rc,output,perfdata)
+
+check_info['mssql_counters.active_transactions'] = {
+    "check_function"          : check_mssql_active_transactions,
+    "inventory_function"      : inventory_mssql_active_transactions,
+    "service_description"     : "",
+    "has_perfdata"            : True,
+    "group"                   : "mssql_active_transactions_counters",
+    "includes"                : ["mssql_counters"]
+}
