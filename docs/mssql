@@ -1,0 +1,8 @@
+title: Custom MS SQL Server Checks
+agents: Windows
+description:
+  Various checks from MSSQL Counters
+item:
+  tipically, a DB name or an Instance name
+
+  
