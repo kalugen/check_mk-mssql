@@ -18,7 +18,7 @@ def inventory_mssql_processes_blocked(info):
 
   for line in info:
     if line[1] == "processes_blocked":
-      inventory.append( (mssql_counters_item(line,"process_blocked"), None))
+      inventory.append((line[0], None))
 
   return inventory
 
@@ -29,26 +29,24 @@ def check_mssql_processes_blocked(item,params,info):
   output = ""
 
   for line in info:
-    if mssql_counters_item(line, 'processes_blocked') != item:
-      continue
+    if line[0] == item and line[1] == "processes_blocked":
+      blocked_count = saveint(line[3])
+      output  = "%d blocked processes" % blocked_count
+      perfdata.append( ( "blocked_procs", blocked_count, warn, crit, None, None ) )
 
-    blocked_count = saveint(line[3])
-    output  = "%d blocked processes" % blocked_count
-    perfdata.append( ( "blocked_procs", blocked_count, warn, crit, None, None ) )
-
-    if blocked_count > crit:
-      rc = 2
-    elif blocked_count > warn:
-      rc = 1
-    else:
-      rc = 0
+      if blocked_count > crit:
+        rc = 2
+      elif blocked_count > warn:
+        rc = 1
+      else:
+        rc = 0
 
   return (rc,output,perfdata)
 
 check_info['mssql_counters.processes_blocked'] = {
     "check_function"          : check_mssql_processes_blocked,
     "inventory_function"      : inventory_mssql_processes_blocked,
-    "service_description"     : "",
+    "service_description"     : "%s Blocked Processes",
     "has_perfdata"            : True,
     "group"                   : "mssql_processes_blocked_counters",
     "default_levels_variable" : "mssql_processes_blocked_defaults",

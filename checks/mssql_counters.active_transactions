@@ -12,8 +12,13 @@
 
 def inventory_mssql_active_transactions(info):
   inventory=[]
+  unwanted_dbs = get_unwanted_dbs()
+
   for line in info:
     if line[1] == "active_transactions":
+      if line[2] in unwanted_dbs:
+        continue
+
       inventory.append((mssql_counters_item(line, "active_transactions"), None))
 
   return inventory
@@ -39,5 +44,5 @@ check_info['mssql_counters.active_transactions'] = {
     "service_description"     : "",
     "has_perfdata"            : True,
     "group"                   : "mssql_active_transactions_counters",
-    "includes"                : ["mssql_counters"]
+    "includes"                : ["mssql_counters","mssql_counters.custom.includes"]
 }

@@ -15,8 +15,13 @@
 
 def inventory_mssql_percent_log_used(info):
   inventory=[]
+  unwanted_dbs = get_unwanted_dbs()
+
   for line in info:
     if line[1] == "percent_log_used":
+      if line[2] in unwanted_dbs:
+        continue
+
       inventory.append( (mssql_counters_item(line, "percent_log_used"), None) )
 
   return inventory
@@ -43,5 +48,5 @@ check_info['mssql_counters.percent_log_used'] = {
     "service_description"     : "",
     "has_perfdata"            : True,
     "group"                   : "mssql_percent_log_used_counters",
-    "includes"                : ["mssql_counters"]
+    "includes"                : ["mssql_counters","mssql_counters.custom.includes"]
 }

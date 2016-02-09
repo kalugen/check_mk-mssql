@@ -1,0 +1,24 @@
+#!/usr/bin/python
+
+unwanted_sql_dbs = []
+
+
+def get_unwanted_dbs():
+
+  unwanted_dbs = []
+
+  # Get every rule matching the current host or its tags
+  for rule in unwanted_sql_dbs:
+    # 1. Get all rules
+    taglist, hostlist = rule[1:3]
+
+    # 2. Skip the rules that do not match the current host or tags
+    if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
+      or not in_extraconf_hostlist(hostlist, g_hostname):
+        continue
+
+    # 3. append all items from this rule
+    for db_rule in rule[0]:
+      unwanted_dbs.append(db_rule)
+
+  return unwanted_dbs

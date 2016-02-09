@@ -9,7 +9,7 @@ def inventory_mssql_temp_tables_creation_rate(info):
   inventory=[]
   for line in info:
     if line[1] == "temp_tables_creation_rate":
-      inventory.append((mssql_counters_item(line, "temp_tables_creation_rate"), None))
+      inventory.append((line[0], None))
 
   return inventory
 
@@ -19,19 +19,17 @@ def check_mssql_temp_tables_creation_rate(item,params,info):
   output = ""
 
   for line in info:
-    if mssql_counters_item(line, 'temp_tables_creation_rate') != item:
-      continue
-
-    temp_rate = saveint(line[3])
-    output    = "Temp table creation rate %d/s" % temp_rate
-    perfdata.append(( "temp_creation", temp_rate, None, None, 0, None ))
+    if line[0] == item and line[1] == "temp_tables_creation_rate":
+      temp_rate = saveint(line[3])
+      output    = "Temp table creation rate %d/s" % temp_rate
+      perfdata.append(( "temp_creation", temp_rate, None, None, 0, None ))
 
   return (rc,output,perfdata)
 
 check_info['mssql_counters.temp_tables_creation_rate'] = {
     "check_function"          : check_mssql_temp_tables_creation_rate,
     "inventory_function"      : inventory_mssql_temp_tables_creation_rate,
-    "service_description"     : "",
+    "service_description"     : "%s Temp Tables",
     "has_perfdata"            : True,
     "group"                   : "mssql_temp_tables_creation_rate_counters",
     "includes"                : ["mssql_counters"]
